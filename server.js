@@ -18,7 +18,8 @@ const validateToken = (req, res, next) => {
     if (!token) return res.status(401).json({ message: 'Access denied. No token provided.' });
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // Ignore token expiration
+        const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
         req.user = decoded;
         next();
     } catch (ex) {
