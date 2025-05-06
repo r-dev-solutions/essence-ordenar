@@ -2,9 +2,10 @@
   "name": "placeorder-api",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node server.js",
+    "build": "echo 'No build step required'"
   },
   "keywords": [],
   "author": "",
