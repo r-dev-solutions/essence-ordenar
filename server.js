@@ -1,33 +1,21 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
-const helmet = require('helmet');
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
+const cors = require('cors'); // <-- add this line
 
 const app = express();
-
-// Middleware
-app.use(cors()); // Open to all origins
-app.use(helmet());
+app.use(cors()); // <-- add this line
 app.use(express.json());
 
-// JWT Validation Middleware
-const validateToken = (req, res, next) => {
-    const token = req.headers['authorization'];
-    if (!token) return res.status(401).json({ message: 'Access denied. No token provided.' });
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+.then(() => console.log('MongoDB connected'))
+.catch(err => console.error('MongoDB connection error:', err));
 
-    try {
-        // Ignore token expiration
-        const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
-        req.user = decoded;
-        next();
-    } catch (ex) {
-        res.status(400).json({ message: 'Invalid token.' });
-    }
-};
-
-// Order Schema
+// Order Schema and Model
 const orderSchema = new mongoose.Schema({
     email: String,
     telefono: String,
@@ -54,31 +42,63 @@ const orderSchema = new mongoose.Schema({
 
 const Order = mongoose.model('Order', orderSchema);
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('MongoDB connection error:', err));
+// CRUD Endpoints
 
-// Routes with JWT validation
-app.post('/api/orders', validateToken, async (req, res) => {
+// Create Order (POST)
+app.post('/api/orders', async (req, res) => {
     try {
-        const newOrder = new Order(req.body);
-        const savedOrder = await newOrder.save();
-        res.status(201).json(savedOrder);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
+        const order = new Order(req.body);
+        await order.save();
+        res.status(201).json(order);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
     }
 });
 
-app.get('/api/orders', validateToken, async (req, res) => {
+// Read All Orders (GET)
+app.get('/api/orders', async (req, res) => {
     try {
         const orders = await Order.find();
         res.json(orders);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 
+// Read Single Order (GET)
+app.get('/api/orders/:id', async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+        if (!order) return res.status(404).json({ error: 'Order not found' });
+        res.json(order);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update Order (PUT)
+app.put('/api/orders/:id', async (req, res) => {
+    try {
+        const order = await Order.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!order) return res.status(404).json({ error: 'Order not found' });
+        res.json(order);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// Delete Order (DELETE)
+app.delete('/api/orders/:id', async (req, res) => {
+    try {
+        const order = await Order.findByIdAndDelete(req.params.id);
+        if (!order) return res.status(404).json({ error: 'Order not found' });
+        res.json({ message: 'Order deleted' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

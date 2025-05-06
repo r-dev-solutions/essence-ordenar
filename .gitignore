@@ -1,16 +1,23 @@
-# .env
-
-# API Documentation
-api_documentation.txt
-
 # Node modules
 node_modules/
 
-# Mac OS specific
-.DS_Store
+# Environment variables
+.env
 
 # Logs
-logs/
+logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-.env
+# OS generated files
+.DS_Store
+
+# Optional npm cache directory
+.npm
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+api_documentation.txt
