@@ -1,5 +1,4 @@
-# Environment variables
-.env
+# .env
 
 # API Documentation
 api_documentation.txt
@@ -13,3 +12,5 @@ node_modules/
 # Logs
 logs/
 *.log
+
+.env
